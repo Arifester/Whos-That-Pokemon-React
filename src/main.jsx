@@ -1,10 +1,27 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+// src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+import HomeScreen from './pages/HomeScreen.jsx';
+import SetupScreen from './pages/SetupScreen.jsx';
+import './index.css';
+
+// Daftarkan semua halaman di sini
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <HomeScreen />,
+    // Di sini bisa ditambahkan halaman error jika path tidak ditemukan
+  },
+  {
+    path: '/setup',
+    element: <SetupScreen />,
+  },
+]);
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
