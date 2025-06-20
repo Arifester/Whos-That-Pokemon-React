@@ -1,26 +1,27 @@
 // src/pages/SetupScreen.jsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 function SetupScreen() {
+  // Panggil custom hook untuk judul dan navigasi
   useDocumentTitle("Setup Game | Who's That Pokémon?");
   const navigate = useNavigate();
 
-  // 1. State untuk menyimpan semua pilihan user
+  // --- STATE MANAGEMENT ---
+  // State untuk menyimpan semua pilihan user
   const [selectedGens, setSelectedGens] = useState([]); // Menyimpan generasi yg dipilih (misal: [1, 3, 5])
   const [timeLimit, setTimeLimit] = useState(10); // Default waktu 10 detik
   const [numOptions, setNumOptions] = useState(4); // Default 4 opsi jawaban
 
-  // 2. Logika untuk menangani klik pada tombol generasi
+  // --- LOGIC HANDLERS ---
+  // Logika untuk menangani klik pada tombol generasi (toggle on/off)
   const handleGenClick = (genNumber) => {
     setSelectedGens((prevGens) => {
-      // Jika generasi sudah ada di dalam array, hapus (deselect)
       if (prevGens.includes(genNumber)) {
         return prevGens.filter((g) => g !== genNumber);
-      }
-      // Jika belum ada, tambahkan (select)
-      else {
+      } else {
         return [...prevGens, genNumber].sort((a, b) => a - b);
       }
     });
@@ -34,9 +35,21 @@ function SetupScreen() {
     setSelectedGens([]);
   };
 
-  // 3. Render UI
+  // Fungsi untuk memulai game dan mengirimkan state ke GameScreen
+  const handleStartGame = () => {
+    // Navigasi ke halaman '/game' sambil membawa "bekal" data di dalam `state`
+    navigate('/game', {
+      state: {
+        selectedGens,
+        timeLimit,
+        numOptions,
+      },
+    });
+  };
+
+  // --- RENDER UI ---
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-4xl">
         <h1 className="text-4xl font-bold text-yellow-400 mb-8 text-center">
           Game Setup
@@ -45,7 +58,7 @@ function SetupScreen() {
         {/* --- Pilihan Generasi --- */}
         <div className="mb-8 p-6 bg-gray-800 rounded-lg">
           <h2 className="text-2xl font-semibold mb-4 text-center">Pilih Generasi</h2>
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-4">
             {[...Array(9).keys()].map((i) => {
               const genNumber = i + 1;
               const isSelected = selectedGens.includes(genNumber);
@@ -55,11 +68,11 @@ function SetupScreen() {
                   onClick={() => handleGenClick(genNumber)}
                   className={`py-3 rounded-lg font-bold transition-colors ${
                     isSelected
-                      ? 'bg-blue-600 hover:bg-blue-700'
+                      ? 'bg-blue-600 hover:bg-blue-700 shadow-lg'
                       : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
-                  Generation {genNumber}
+                  Gen {genNumber}
                 </button>
               );
             })}
@@ -76,7 +89,7 @@ function SetupScreen() {
                 <h2 className="text-2xl font-semibold mb-4 text-center">Waktu Tebakan</h2>
                 <div className="flex justify-center gap-4">
                     {[5, 7, 10].map(time => (
-                        <button key={time} onClick={() => setTimeLimit(time)} className={`py-2 px-6 rounded-lg font-bold transition-colors ${timeLimit === time ? 'bg-blue-600' : 'bg-gray-600 hover:bg-gray-700'}`}>
+                        <button key={time} onClick={() => setTimeLimit(time)} className={`py-2 px-6 rounded-lg font-bold transition-colors ${timeLimit === time ? 'bg-blue-600 shadow-lg' : 'bg-gray-600 hover:bg-gray-700'}`}>
                             {time}s
                         </button>
                     ))}
@@ -85,13 +98,16 @@ function SetupScreen() {
 
             {/* --- Pilihan Opsi Jawaban --- */}
             <div className="p-6 bg-gray-800 rounded-lg">
-                <h2 className="text-2xl font-semibold mb-4 text-center">Jumlah Opsi Jawaban</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-center">Jumlah Opsi</h2>
                 <div className="flex justify-center gap-4">
-                    {[2, 4, 5, 'Free'].map(opt => (
-                        <button key={opt} onClick={() => setNumOptions(opt === 'Free' ? 'free-input' : opt)} className={`py-2 px-6 rounded-lg font-bold transition-colors ${numOptions === (opt === 'Free' ? 'free-input' : opt) ? 'bg-blue-600' : 'bg-gray-600 hover:bg-gray-700'}`}>
+                    {[2, 4, 5, 'Free'].map(opt => {
+                      const value = opt === 'Free' ? 'free-input' : opt;
+                      return (
+                        <button key={opt} onClick={() => setNumOptions(value)} className={`py-2 px-6 rounded-lg font-bold transition-colors ${numOptions === value ? 'bg-blue-600 shadow-lg' : 'bg-gray-600 hover:bg-gray-700'}`}>
                             {opt}
                         </button>
-                    ))}
+                      )
+                    })}
                 </div>
             </div>
         </div>
@@ -105,8 +121,9 @@ function SetupScreen() {
             &larr; Back to Home
           </button>
           <button
+            onClick={handleStartGame}
             disabled={selectedGens.length === 0}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-12 rounded-lg text-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-12 rounded-lg text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
           >
             Mulai Game!
           </button>

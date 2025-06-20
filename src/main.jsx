@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import HomeScreen from './pages/HomeScreen.jsx';
 import SetupScreen from './pages/SetupScreen.jsx';
+import GameScreen from './pages/GameScreen.jsx';
 import './index.css';
 
 // Daftarkan semua halaman di sini
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     path: '/setup',
     element: <SetupScreen />,
   },
+  {
+    path: '/game',
+    element: <GameScreen />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
