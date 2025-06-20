@@ -1,5 +1,4 @@
 // src/pages/SetupScreen.jsx
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -14,6 +13,7 @@ function SetupScreen() {
   const [selectedGens, setSelectedGens] = useState([]); // Menyimpan generasi yg dipilih (misal: [1, 3, 5])
   const [timeLimit, setTimeLimit] = useState(10); // Default waktu 10 detik
   const [numOptions, setNumOptions] = useState(4); // Default 4 opsi jawaban
+  const [numRounds, setNumRounds] = useState(5); // Default 5 ronde
 
   // --- LOGIC HANDLERS ---
   // Logika untuk menangani klik pada tombol generasi (toggle on/off)
@@ -43,6 +43,7 @@ function SetupScreen() {
         selectedGens,
         timeLimit,
         numOptions,
+        numRounds
       },
     });
   };
@@ -109,6 +110,23 @@ function SetupScreen() {
                       )
                     })}
                 </div>
+            <div className="p-6 bg-gray-800 rounded-lg">
+                <h2 className="text-2xl font-semibold mb-4 text-center">Jumlah Ronde</h2>
+                <div className="flex justify-center items-center gap-2">
+                  {[5, 10, 15].map(rounds => (
+                      <button key={rounds} onClick={() => setNumRounds(rounds)} className={`py-2 px-4 rounded-lg font-bold transition-colors text-sm ${numRounds === rounds ? 'bg-blue-600' : 'bg-gray-600 hover:bg-gray-700'}`}>
+                          {rounds}
+                      </button>
+                  ))}
+                  <input 
+                    type="number" 
+                    value={numRounds}
+                    onChange={(e) => setNumRounds(Number(e.target.value))}
+                    className="bg-gray-700 text-white font-bold w-20 text-center py-2 px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Custom"
+                  />
+                </div>
+              </div>
             </div>
         </div>
 
