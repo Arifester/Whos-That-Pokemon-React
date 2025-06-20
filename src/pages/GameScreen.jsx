@@ -3,9 +3,6 @@ import { useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
-// PERUBAHAN 1: Hapus baris ini
-// const TOTAL_ROUNDS = 5; 
-
 function GameScreen() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,12 +20,17 @@ function GameScreen() {
   const [round, setRound] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
 
-  // PERUBAHAN 2: Ambil numRounds dari settings
-  const { numRounds = 5 } = settings;
+  const { 
+    numRounds = 5, 
+    numOptions = 4,
+    timeLimit = 10,
+    selectedGens,
+    difficulty = 'normal',
+    isSuddenDeath = false
+  } = settings;
 
   useDocumentTitle(
     gameState === 'guessing' 
-      // PERUBAHAN 3: Ganti TOTAL_ROUNDS dengan numRounds
       ? `Round ${round}/${numRounds} | Who's That Pokémon?` 
       : "Playing! | Who's That Pokémon?"
   );
@@ -60,13 +62,17 @@ function GameScreen() {
   }, []);
 
   const startNewRound = useCallback(async (list) => {
-    // PERUBAHAN 4: Ganti TOTAL_ROUNDS dengan numRounds
-    if (round >= numRounds) {
-      console.log("Game Selesai! Skor Akhir:", score);
-      navigate('/end', { state: { score, totalRounds: numRounds } });
-      return;
-    }
-
+if (round > numRounds) {
+  navigate('/end', { 
+    state: { 
+      score, 
+      totalRounds: numRounds, 
+      // Tambahkan settings ke dalam bekal
+      settings: { difficulty, timeLimit, numOptions } 
+    } 
+  });
+  return;
+}
     setGameState('loading');
     try {
       const randomIndex = Math.floor(Math.random() * list.length);
@@ -74,36 +80,49 @@ function GameScreen() {
       const pokemonDetails = await fetchPokemonDetails(randomPokemonInfo.url.replace('-species', ''));
 
       if (!pokemonDetails.image) {
-        console.warn("Pokemon tidak punya gambar, memilih lagi...", pokemonDetails);
         startNewRound(list);
         return;
       }
       
       setCurrentPokemon(pokemonDetails);
-      setOptions(generateOptions(pokemonDetails, list, settings.numOptions));
+      setOptions(generateOptions(pokemonDetails, list, numOptions));
       setRound(prev => prev + 1);
-      setTimeLeft(settings.timeLimit);
+      setTimeLeft(timeLimit);
       setGameState('guessing');
     } catch (err) {
       setError("Gagal memuat Pokémon berikutnya.");
     }
-  }, [round, score, generateOptions, settings, navigate, pokemonList, numRounds]); // Tambahkan numRounds di sini juga
+  }, [round, score, generateOptions, settings, navigate, pokemonList, numRounds, numOptions, timeLimit]);
 
-  // ... (Sisa kode useEffect dan handleAnswerClick sama persis seperti kodemu)
   useEffect(() => {
     if (initialFetchDone.current) return;
     initialFetchDone.current = true;
-    if (!settings.selectedGens || settings.selectedGens.length === 0) {
+    if (!selectedGens || selectedGens.length === 0) {
       navigate('/setup');
       return;
     }
     const fetchAllPokemonByGen = async () => {
       try {
-        const promises = settings.selectedGens.map(genId =>
+        const promises = selectedGens.map(genId =>
           fetch(`https://pokeapi.co/api/v2/generation/${genId}/`).then(res => res.json())
         );
         const results = await Promise.all(promises);
-        const allPokemon = results.flatMap(genData => genData.pokemon_species);
+        let allPokemon = results.flatMap(genData => genData.pokemon_species);
+
+        // PERUBAHAN 2: Logika Mode Expert disisipkan di sini
+        if (difficulty === 'expert') {
+          console.log("Mode Expert: Memfilter Pokémon legendaris...");
+          const detailPromises = allPokemon.map(p => fetch(p.url).then(res => res.json()));
+          const speciesDetails = await Promise.all(detailPromises);
+          
+          const normalPokemonSpecies = speciesDetails.filter(s => !s.is_legendary && !s.is_mythical);
+          
+          allPokemon = normalPokemonSpecies.map(s => {
+            const variety = s.varieties.find(v => v.is_default);
+            return { name: s.name, url: variety.pokemon.url };
+          });
+        }
+
         setPokemonList(allPokemon);
         startNewRound(allPokemon);
       } catch (err) {
@@ -112,7 +131,7 @@ function GameScreen() {
     };
     fetchAllPokemonByGen();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [difficulty]); // Tambahkan difficulty sebagai dependency
 
   useEffect(() => {
     if (gameState !== 'guessing' || timeLeft === null) return;
@@ -120,28 +139,39 @@ function GameScreen() {
       setGameState('revealed');
       return;
     }
-    const timerId = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
+    const timerId = setInterval(() => { setTimeLeft(prev => prev - 1) }, 1000);
     return () => clearInterval(timerId);
   }, [timeLeft, gameState]);
 
+  // PERUBAHAN 3: Ganti seluruh fungsi ini untuk logika Sudden Death
   const handleAnswerClick = (selectedName) => {
     if (gameState !== 'guessing') return;
-    setGameState('revealed');
-    if (selectedName.toLowerCase() === currentPokemon.name.toLowerCase()) {
+
+    const isCorrect = selectedName.toLowerCase() === currentPokemon.name.toLowerCase();
+    setGameState('revealed'); // Ungkap jawaban untuk semua kasus
+
+    if (isCorrect) {
       setScore(prev => prev + 1);
+    } else {
+      // Jika salah DAN mode Sudden Death aktif
+      if (isSuddenDeath) {
+        setTimeout(() => {
+          navigate('/end', { state: { score, totalRounds: numRounds, isSuddenDeath: true } });
+        }, 2000); // Beri jeda 2 detik
+        return; 
+      }
     }
   };
   
   useEffect(() => {
-    if (gameState === 'revealed') {
+    // Jangan lanjut ke ronde berikutnya jika game sudah berakhir karena Sudden Death
+    if (gameState === 'revealed' && !(isSuddenDeath && score < round)) {
       const nextRoundTimer = setTimeout(() => {
         startNewRound(pokemonList);
       }, 3000);
       return () => clearTimeout(nextRoundTimer);
     }
-  }, [gameState, pokemonList, startNewRound]);
+  }, [gameState, pokemonList, startNewRound, isSuddenDeath, score, round]);
 
   // --- RENDER UI ---
   const isLoadingOrError = gameState === 'loading' || error;
@@ -153,7 +183,6 @@ function GameScreen() {
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
         <div className="flex justify-between items-center mb-4 text-lg">
-          {/* PERUBAHAN 5: Ganti TOTAL_ROUNDS dengan numRounds */}
           <p>Round: <span className="font-bold">{round > numRounds ? numRounds : round}/{numRounds}</span></p>
           <p>Score: <span className="font-bold">{score}</span></p>
           <p className="text-red-400 font-bold">Time: {timeLeft}s</p>
