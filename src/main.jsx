@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomeScreen from './pages/HomeScreen.jsx';
 import SetupScreen from './pages/SetupScreen.jsx';
 import GameScreen from './pages/GameScreen.jsx';
+import EndScreen from './pages/EndScreen.jsx';
 import './index.css';
 
 // Daftarkan semua halaman di sini
@@ -22,11 +23,12 @@ const router = createBrowserRouter([
   {
     path: '/game',
     element: <GameScreen />,
-  }
+  },
+  { path: '/end',
+    element: <EndScreen />,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>
 );
