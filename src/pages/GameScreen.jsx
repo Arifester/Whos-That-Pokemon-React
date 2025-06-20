@@ -1,5 +1,5 @@
 // src/pages/GameScreen.jsx
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
@@ -8,6 +8,7 @@ const TOTAL_ROUNDS = 5; // Kita akan main sebanyak 5 ronde
 function GameScreen() {
   const location = useLocation();
   const navigate = useNavigate();
+  const initialFetchDone = useRef(false);
 
   // --- STATE MANAGEMENT ---
   const [settings] = useState(location.state || {});
@@ -89,10 +90,13 @@ function GameScreen() {
     } catch (err) {
       setError("Gagal memuat Pokémon berikutnya.");
     }
-  }, [round, score, generateOptions, settings, navigate]);
+  }, [round, score, generateOptions, settings, navigate, pokemonList]);
 
   // Efek untuk mengambil daftar Pokémon (hanya sekali)
   useEffect(() => {
+    if (initialFetchDone.current) 
+      return; // Hanya ambil sekali
+    initialFetchDone.current = true;
     if (!settings.selectedGens || settings.selectedGens.length === 0) {
       navigate('/setup');
       return;
