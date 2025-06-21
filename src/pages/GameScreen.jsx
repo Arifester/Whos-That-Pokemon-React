@@ -62,7 +62,7 @@ function GameScreen() {
   }, []);
 
   const startNewRound = useCallback(async (list) => {
-if (round > numRounds) {
+if (round >= numRounds) {
   navigate('/end', { 
     state: { 
       score, 
