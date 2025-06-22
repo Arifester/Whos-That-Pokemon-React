@@ -116,7 +116,26 @@ function GameScreen() {
   // 3. useEffect: Menangani timer
   useEffect(() => {
     if (gameState !== 'guessing' || timeLeft === null) return;
-    if (timeLeft === 0) { setGameState('revealed'); return; }
+    
+    if (timeLeft === 0) {
+      setGameState('revealed'); // Selalu ungkap jawaban saat waktu habis
+
+      // Jika waktu habis DAN mode Sudden Death aktif, akhiri game
+      if (isSuddenDeath) {
+        setTimeout(() => {
+          navigate('/end', {
+            state: {
+              score,
+              totalRounds: numRounds,
+              isSuddenDeath: true,
+              settings: { difficulty, timeLimit, numOptions },
+            },
+          });
+        }, 2000); // Beri jeda 2 detik untuk melihat jawaban yg benar
+      }
+      return; // Hentikan eksekusi timer
+    }
+
     const timerId = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearInterval(timerId);
   }, [timeLeft, gameState]);
