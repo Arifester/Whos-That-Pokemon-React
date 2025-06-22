@@ -179,10 +179,14 @@ function GameScreen() {
   };
 
   const handleFreeInputSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Mencegah halaman reload
     if (!inputValue.trim() || gameState !== 'guessing') return;
-    handleAnswer(inputValue.trim().toLowerCase().replace(/ /g, '-') === currentPokemon.name.toLowerCase());
-    setInputValue("");
+
+    // Cek jawaban dengan format yang fleksibel
+    const isCorrect = inputValue.trim().toLowerCase().replace(/ /g, '-') === currentPokemon.name.toLowerCase();
+    
+    handleAnswer(isCorrect); // Panggil fungsi handleAnswer yang sama
+    setInputValue(""); // Kosongkan input field
   };
 
   // --- RENDER UI ---
@@ -211,12 +215,41 @@ function GameScreen() {
             )}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4 h-28">
-          {gameState === 'guessing' && options.map((optionName) => (
-            <button key={optionName} onClick={() => handleAnswerClick(optionName)} disabled={gameState !== 'guessing'} className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded capitalize transition disabled:opacity-50 disabled:hover:bg-blue-600">
-              {optionName.replace('-', ' ')}
-            </button>
-          ))}
+
+        <div className="grid grid-cols-2 gap-4 min-h-28 items-start [&>*:last-child:nth-child(odd)]:col-span-2">
+          {numOptions === 'free-input' ? (
+            // Tampilan untuk Mode Free Input
+            <form onSubmit={handleFreeInputSubmit} className="col-span-2 flex gap-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Ketik nama Pokémon..."
+                disabled={gameState !== 'guessing'}
+                className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={gameState !== 'guessing' || !inputValue.trim()}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Submit
+              </button>
+            </form>
+          ) : (
+            // Tampilan untuk Mode Pilihan Ganda
+            options.map((optionName) => (
+              <button
+                key={optionName}
+                onClick={() => handleAnswerClick(optionName)}
+                disabled={gameState !== "guessing"}
+                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded capitalize transition disabled:opacity-50"
+              >
+                {optionName.replace("-", " ")}
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>
