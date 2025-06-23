@@ -90,34 +90,52 @@ function GameScreen() {
 
   // 2. useEffect: Memulai ronde baru setiap kali 'round' berubah
   useEffect(() => {
-    if (round === 0 || pokemonList.length === 0) return;
+  if (round === 0 || pokemonList.length === 0) return;
 
-    let isActive = true;
-    const startNewRound = async () => {
-      setGameState('loading');
-      try {
-        const randomIndex = Math.floor(Math.random() * pokemonList.length);
-        const randomPokemonInfo = pokemonList[randomIndex];
-        const fetchUrl = randomPokemonInfo.url.includes('/pokemon/') ? randomPokemonInfo.url : randomPokemonInfo.url.replace('-species', '');
-        const pokemonDetails = await fetchPokemonDetails(fetchUrl);
+  let isActive = true;
+  const startNewRound = async () => {
+    setGameState('loading');
+    try {
+      const randomIndex = Math.floor(Math.random() * pokemonList.length);
+      const randomPokemonInfo = pokemonList[randomIndex];
+      const fetchUrl = randomPokemonInfo.url.includes('/pokemon/') ? randomPokemonInfo.url : randomPokemonInfo.url.replace('-species', '');
+      const pokemonDetails = await fetchPokemonDetails(fetchUrl);
 
-        if (!pokemonDetails.image) { startNewRound(); return; }
-        if (isActive) {
-          setCurrentPokemon(pokemonDetails);
-          setOptions(generateOptions(pokemonDetails, pokemonList, numOptions));
-          playWtpSound();
-          // Beri jeda sebelum timer dan tebakan dimulai
-          setTimeout(() => {
-            setTimeLeft(timeLimit);
-            setGameState('guessing');
-          }); // Jeda 2 detik (bisa disesuaikan)
-        }
-      } catch (err) { /* ... */ }
-    };
-    startNewRound();
-    return () => { isActive = false; };
-  }, [round, pokemonList, generateOptions, fetchPokemonDetails, numOptions, timeLimit]);
+      if (!pokemonDetails.image) { startNewRound(); return; }
+      if (isActive) {
+        // vvv PERUBAHANNYA DI SINI vvv
+        setCurrentPokemon(pokemonDetails);
+        setOptions(generateOptions(pokemonDetails, pokemonList, numOptions));
+        
+        // Hapus pemanggilan playWtpSound() dan setTimeout() dari sini.
+        // Cukup ubah gameState menjadi 'presenting'.
+        setGameState('presenting');
+        // ^^^ PERUBAHANNYA DI SINI ^^^
+      }
+    } catch (err) { 
+        if (isActive) setError("Gagal memuat Pokémon berikutnya.");
+    }
+  };
+  startNewRound();
+  return () => { isActive = false; };
+}, [round, pokemonList, generateOptions, fetchPokemonDetails, numOptions, timeLimit]); 
   
+    // useEffect baru untuk menangani state 'presenting'
+  useEffect(() => {
+    if (gameState === 'presenting') {
+      playWtpSound(); // 1. Putar suara "Who's That Pokémon?"
+
+      // 2. Siapkan timer untuk memulai tebakan setelah suara selesai
+      const startGuessingTimer = setTimeout(() => {
+        setTimeLeft(timeLimit);   // 3. Set waktu tebakan
+        setGameState('guessing'); // 4. Ubah state untuk mulai menebak
+      }, 4000); // Jeda 4 detik (bisa disesuaikan dengan panjang suaramu)
+
+      // Wajib ada cleanup function untuk mencegah bug
+      return () => clearTimeout(startGuessingTimer);
+    }
+  }, [gameState, timeLimit]);
+
   // 3. useEffect: Menangani timer
   useEffect(() => {
     if (gameState !== 'guessing' || timeLeft === null) return;
@@ -168,31 +186,47 @@ function GameScreen() {
 
   // --- FUNGSI EVENT HANDLER ---
   const handleAnswer = (isCorrect) => {
-    setGameState("revealed");
-    if (isCorrect) {
-      playCorrectSound();
-      setScore((prev) => prev + 1);
-    } else if (isSuddenDeath) {
-      playWrongSound();
+  // Pengaman ekstra, jangan lakukan apa-apa jika bukan sedang menebak
+  if (gameState !== 'guessing') return;
+
+  setGameState("revealed"); // Selalu ungkap jawaban, tidak peduli benar atau salah
+
+  if (isCorrect) {
+    playCorrectSound();
+    setScore((prev) => prev + 1);
+  } else {
+    // Jika jawaban salah
+    playWrongSound();
+    // Cek apakah mode Sudden Death aktif
+    if (isSuddenDeath) {
       setTimeout(() => {
-        navigate('/end', { state: { score, totalRounds: numRounds, isSuddenDeath: true, settings: { difficulty, timeLimit, numOptions } } });
-      }, 2000);
+        navigate('/end', {
+          state: {
+            score,
+            totalRounds: numRounds,
+            isSuddenDeath: true,
+            settings: { difficulty, timeLimit, numOptions },
+          },
+        });
+      }, 2000); // Beri jeda agar pemain bisa lihat jawaban
     }
-  };
+  }
+};
 
+  // 2. Handler untuk jawaban dari KLIK TOMBOL
   const handleAnswerClick = (selectedName) => {
-    if (gameState !== 'guessing') return;
-    handleAnswer(selectedName.toLowerCase() === currentPokemon.name.toLowerCase());
+    const isCorrect = selectedName.toLowerCase() === currentPokemon.name.toLowerCase();
+    handleAnswer(isCorrect); // Kirim hasilnya (true/false) ke fungsi pusat
   };
 
+  // 3. Handler untuk jawaban dari INPUT TEKS
   const handleFreeInputSubmit = (e) => {
-    e.preventDefault(); // Mencegah halaman reload
-    if (!inputValue.trim() || gameState !== 'guessing') return;
+    e.preventDefault();
+    if (!inputValue.trim()) return;
 
-    // Cek jawaban dengan format yang fleksibel
     const isCorrect = inputValue.trim().toLowerCase().replace(/ /g, '-') === currentPokemon.name.toLowerCase();
+    handleAnswer(isCorrect); // Kirim hasilnya (true/false) ke fungsi pusat
     
-    handleAnswer(isCorrect); // Panggil fungsi handleAnswer yang sama
     setInputValue(""); // Kosongkan input field
   };
 
@@ -208,7 +242,9 @@ function GameScreen() {
         <div className="flex justify-between items-center mb-4 text-lg">
           <p>Round: <span className="font-bold">{round > numRounds ? numRounds : round}/{numRounds}</span></p>
           <p>Score: <span className="font-bold">{score}</span></p>
+          {gameState === 'guessing' && (
           <p className="text-red-400 font-bold">Time: {timeLeft}s</p>
+          )}
         </div>
 
         {/* ... sisa JSX sama persis seperti kodemu ... */}
