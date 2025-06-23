@@ -2,7 +2,7 @@
 import {useState, useEffect, useCallback, useRef} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import {playWtpSound, playCorrectSound, playWrongSound} from '../utils/soundManager';
+import {wtpSound, correctSound, wrongSound} from '../utils/soundManager';
 
 function GameScreen() {
   const location = useLocation();
@@ -123,7 +123,7 @@ function GameScreen() {
     // useEffect baru untuk menangani state 'presenting'
   useEffect(() => {
     if (gameState === 'presenting') {
-      playWtpSound(); // 1. Putar suara "Who's That Pokémon?"
+      wtpSound.play(); // 1. Putar suara "Who's That Pokémon?"
 
       // 2. Siapkan timer untuk memulai tebakan setelah suara selesai
       const startGuessingTimer = setTimeout(() => {
@@ -192,11 +192,11 @@ function GameScreen() {
   setGameState("revealed"); // Selalu ungkap jawaban, tidak peduli benar atau salah
 
   if (isCorrect) {
-    playCorrectSound();
+    correctSound.play();
     setScore((prev) => prev + 1);
   } else {
     // Jika jawaban salah
-    playWrongSound();
+    wrongSound.play();
     // Cek apakah mode Sudden Death aktif
     if (isSuddenDeath) {
       setTimeout(() => {
@@ -236,67 +236,85 @@ function GameScreen() {
     return <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center"><p className="text-2xl">{error || 'Loading Pokémon...'}</p></div>;
   }
 
-  return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
-        <div className="flex justify-between items-center mb-4 text-lg">
-          <p>Round: <span className="font-bold">{round > numRounds ? numRounds : round}/{numRounds}</span></p>
-          <p>Score: <span className="font-bold">{score}</span></p>
-          {gameState === 'guessing' && (
+return (
+  <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
+      <div className="flex justify-between items-center mb-4 text-lg">
+        <p>Round: <span className="font-bold">{round > numRounds ? numRounds : round}/{numRounds}</span></p>
+        <p>Score: <span className="font-bold">{score}</span></p>
+        {/* Timer hanya muncul saat menebak */}
+        {gameState === 'guessing' && timeLeft !== null && (
           <p className="text-red-400 font-bold">Time: {timeLeft}s</p>
-          )}
-        </div>
-
-        {/* ... sisa JSX sama persis seperti kodemu ... */}
-        {currentPokemon && (
-          <div className="relative w-64 h-64 mx-auto bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-            <img src={currentPokemon.image} alt="Pokémon" className="w-full h-full object-contain transition-all duration-500" style={{ filter: gameState === 'guessing' ? 'brightness(0)' : 'brightness(1)' }} />
-            {gameState === 'revealed' && (
-              <div className="absolute bottom-2 bg-black bg-opacity-70 px-4 py-1 rounded-md">
-                <p className="font-bold text-xl capitalize">{currentPokemon.name.replace('-', ' ')}</p>
-              </div>
-            )}
-          </div>
         )}
+      </div>
 
-        <div className="grid grid-cols-2 gap-4 min-h-28 items-start [&>*:last-child:nth-child(odd)]:col-span-2">
-          {numOptions === 'free-input' ? (
-            // Tampilan untuk Mode Free Input
-            <form onSubmit={handleFreeInputSubmit} className="col-span-2 flex gap-2">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ketik nama Pokémon..."
-                disabled={gameState !== 'guessing'}
-                className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                autoFocus
-              />
-              <button
-                type="submit"
-                disabled={gameState !== 'guessing' || !inputValue.trim()}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Submit
-              </button>
-            </form>
-          ) : (
-            // Tampilan untuk Mode Pilihan Ganda
-            options.map((optionName) => (
-              <button
-                key={optionName}
-                onClick={() => handleAnswerClick(optionName)}
-                disabled={gameState !== "guessing"}
-                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded capitalize transition disabled:opacity-50"
-              >
-                {optionName.replace("-", " ")}
-              </button>
-            ))
+      {/* Loading antar ronde atau gambar Pokemon */}
+      {(gameState === 'loading' && round > 0) ? (
+        <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+          <p>Loading next Pokémon...</p>
+        </div>
+      ) : currentPokemon && (
+        <div className="relative w-64 h-64 mx-auto bg-gray-700 rounded-lg flex items-center justify-center mb-4">
+          <img
+            src={currentPokemon.image}
+            alt="Pokémon"
+            className="w-full h-full object-contain transition-all duration-500"
+            // PERUBAHAN 1: Tambahkan kondisi 'presenting' agar tetap siluet
+            style={{
+              filter: gameState === 'presenting' || gameState === 'guessing'
+                ? 'brightness(0)'
+                : 'brightness(1)'
+            }}
+          />
+          {gameState === 'revealed' && (
+            <div className="absolute bottom-2 bg-black bg-opacity-70 px-4 py-1 rounded-md">
+              <p className="font-bold text-xl capitalize">{currentPokemon.name.replace('-', ' ')}</p>
+            </div>
           )}
         </div>
+      )}
+      
+      {/* Opsi Jawaban */}
+      <div className="grid grid-cols-2 gap-4 min-h-28 items-start [&>*:last-child:nth-child(odd)]:col-span-2">
+        {numOptions === 'free-input' ? (
+          <form onSubmit={handleFreeInputSubmit} className="col-span-2 flex gap-2">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ketik nama Pokémon..."
+              // Teks input hanya aktif saat menebak
+              disabled={gameState !== 'guessing'}
+              className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={gameState !== 'guessing' || !inputValue.trim()}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit
+            </button>
+          </form>
+        ) : (
+          // Tampilan untuk Mode Pilihan Ganda
+          options.map((optionName) => (
+            <button
+              key={optionName}
+              onClick={() => handleAnswerClick(optionName)}
+              // Tombol hanya aktif saat menebak
+              disabled={gameState !== "guessing"}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded capitalize transition disabled:opacity-50"
+            >
+              {/* PERUBAHAN 2: Teks hanya muncul saat menebak */}
+              {gameState === 'guessing' ? optionName.replace("-", " ") : <>&nbsp;</>}
+            </button>
+          ))
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default GameScreen;

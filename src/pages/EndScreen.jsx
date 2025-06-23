@@ -2,15 +2,14 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useEffect, useState } from 'react';
-import { playGameOverSound } from '../utils/soundManager';
+// PERUBAHAN 1: Import instance 'gameOverSound', bukan lagi fungsi playGameOverSound
+import { gameOverSound } from '../utils/soundManager';
 
 function EndScreen() {
   useDocumentTitle("Game Over | Who's That Pokémon?");
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- Ambil data dari state navigasi ---
-  // Beri nilai default untuk semua properti untuk mencegah error jika halaman diakses langsung
   const { score, totalRounds, isSuddenDeath, settings } = location.state || { 
     score: 0, 
     totalRounds: 0, 
@@ -18,26 +17,35 @@ function EndScreen() {
     settings: { difficulty: 'normal', timeLimit: 10, numOptions: 4 }
   };
   
-  // --- State untuk High Score ---
   const [highScore, setHighScore] = useState(0);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
 
+  // PERUBAHAN 2: useEffect baru yang KHUSUS untuk menangani suara
+  useEffect(() => {
+    // Saat halaman muncul, putar suara
+    gameOverSound.play();
+
+    // PENTING: Ini adalah "cleanup function"
+    // Ia akan otomatis dijalankan oleh React saat kita meninggalkan halaman ini.
+    return () => {
+      // Saat halaman akan ditutup/ditinggalkan, hentikan suaranya
+      gameOverSound.stop();
+    };
+  }, []); // Dependensi kosong [] berarti efek ini hanya berjalan SEKALI saat halaman dimuat
+          // dan cleanup-nya hanya berjalan SEKALI saat halaman ditutup.
 
   // --- Logika High Score & Redirect ---
   useEffect(() => {
-    // Jika state tidak ada (diakses langsung), kembali ke home
     if (location.state === null) {
       navigate('/');
-      return; // Hentikan eksekusi lebih lanjut
+      return;
     }
-    playGameOverSound();
+    // playGameOverSound(); 
 
-    // Ambil highscore dari localStorage saat komponen dimuat
     const savedHighScore = localStorage.getItem('pokemon-quiz-highscore') || 0;
     const currentHighScore = Number(savedHighScore);
     setHighScore(currentHighScore);
 
-    // Cek jika skor saat ini adalah rekor baru
     if (score > currentHighScore) {
       localStorage.setItem('pokemon-quiz-highscore', score);
       setHighScore(score);
@@ -45,10 +53,8 @@ function EndScreen() {
     }
   }, [location.state, navigate, score]);
 
-
   // --- Variabel untuk Tampilan ---
   const percentage = totalRounds > 0 ? Math.round((score / totalRounds) * 100) : 0;
-
   const getEndMessage = () => {
     if (isSuddenDeath && score < totalRounds) return "Satu kesalahan mengakhiri perjalananmu. Coba lagi!";
     if (percentage === 100) return "Sempurna! Kamu seorang Pokémon Master!";
