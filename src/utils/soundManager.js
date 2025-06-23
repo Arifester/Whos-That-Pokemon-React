@@ -9,21 +9,21 @@ import gameOverSfx from '../assets/game-over.mp3';
 // 2. Buat instance 'Howl' untuk setiap suara dan ekspor.
 export const correctSound = new Howl({
   src: [correctSfx],
-  volume: 0.5,
+  volume: 1.0,
 });
 
 export const wrongSound = new Howl({
   src: [wrongSfx],
-  volume: 0.5,
+  volume: 1.0,
 });
 
 export const wtpSound = new Howl({
   src: [wtpSfx],
-  volume: 0.6,
+  volume: 1.0,
 });
 
 export const gameOverSound = new Howl({
   src: [gameOverSfx],
-  volume: 0.5,
+  volume: 0.6,
   loop: false,
 });
