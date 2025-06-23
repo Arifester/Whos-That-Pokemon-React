@@ -1,7 +1,8 @@
 // src/pages/GameScreen.jsx
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import {useState, useEffect, useCallback, useRef} from 'react';
+import {useLocation, useNavigate} from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import {playWtpSound, playCorrectSound, playWrongSound} from '../utils/soundManager';
 
 function GameScreen() {
   const location = useLocation();
@@ -104,10 +105,14 @@ function GameScreen() {
         if (isActive) {
           setCurrentPokemon(pokemonDetails);
           setOptions(generateOptions(pokemonDetails, pokemonList, numOptions));
-          setTimeLeft(timeLimit);
-          setGameState('guessing');
+          playWtpSound();
+          // Beri jeda sebelum timer dan tebakan dimulai
+          setTimeout(() => {
+            setTimeLeft(timeLimit);
+            setGameState('guessing');
+          }, 2000); // Jeda 2 detik (bisa disesuaikan)
         }
-      } catch (err) { if (isActive) setError("Gagal memuat Pokémon berikutnya."); }
+      } catch (err) { /* ... */ }
     };
     startNewRound();
     return () => { isActive = false; };
@@ -165,8 +170,10 @@ function GameScreen() {
   const handleAnswer = (isCorrect) => {
     setGameState("revealed");
     if (isCorrect) {
+      playCorrectSound();
       setScore((prev) => prev + 1);
     } else if (isSuddenDeath) {
+      playWrongSound();
       setTimeout(() => {
         navigate('/end', { state: { score, totalRounds: numRounds, isSuddenDeath: true, settings: { difficulty, timeLimit, numOptions } } });
       }, 2000);
