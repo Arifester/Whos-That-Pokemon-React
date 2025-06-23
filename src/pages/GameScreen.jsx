@@ -110,7 +110,7 @@ function GameScreen() {
           setTimeout(() => {
             setTimeLeft(timeLimit);
             setGameState('guessing');
-          }, 2000); // Jeda 2 detik (bisa disesuaikan)
+          }); // Jeda 2 detik (bisa disesuaikan)
         }
       } catch (err) { /* ... */ }
     };

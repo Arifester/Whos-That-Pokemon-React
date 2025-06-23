@@ -3,8 +3,9 @@ import { Howl } from 'howler';
 
 // Import file suara dari folder assets
 import wtpSfx from '../assets/wtp.mp3';
-import correctSfx from '../assets/correct_answer.mp3';
-import wrongSfx from '../assets/wrong_answer.mp3';
+import correctSfx from '../assets/correct-answer.mp3';
+import wrongSfx from '../assets/wrong-answer.mp3';
+import gameOverSfx from '../assets/game-over.mp3';
 
 // Buat instance Howl untuk setiap suara
 const wtpSound = new Howl({
@@ -22,6 +23,11 @@ const wrongSound = new Howl({
   volume: 0.5,
 });
 
+const gameOverSound = new Howl({
+  src: [gameOverSfx],
+  volume: 0.4,
+});
+
 // Buat dan ekspor fungsi untuk memutar suara
 export const playWtpSound = () => {
   wtpSound.play();
@@ -33,4 +39,8 @@ export const playCorrectSound = () => {
 
 export const playWrongSound = () => {
   wrongSound.play();
+};
+
+export const playGameOverSound = () => {
+  gameOverSound.play();
 };

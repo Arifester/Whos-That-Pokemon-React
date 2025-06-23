@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useEffect, useState } from 'react';
+import { playGameOverSound } from '../utils/soundManager';
 
 function EndScreen() {
   useDocumentTitle("Game Over | Who's That Pokémon?");
@@ -29,6 +30,7 @@ function EndScreen() {
       navigate('/');
       return; // Hentikan eksekusi lebih lanjut
     }
+    playGameOverSound();
 
     // Ambil highscore dari localStorage saat komponen dimuat
     const savedHighScore = localStorage.getItem('pokemon-quiz-highscore') || 0;
