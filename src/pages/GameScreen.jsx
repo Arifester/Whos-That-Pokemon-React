@@ -62,7 +62,14 @@ function GameScreen() {
     const response = await fetch(pokemonUrl);
     if (!response.ok) throw new Error(`Gagal fetch: ${response.status}`);
     const data = await response.json();
-    return { name: data.name, image: data.sprites.other['official-artwork'].front_default };
+    return {
+    name: data.name,
+    image: data.sprites.other['official-artwork'].front_default,
+    id: data.id,
+    types: data.types.map(t => t.type.name),
+    height: data.height / 10, // konversi ke meter
+    weight: data.weight / 10, // konversi ke kg
+  };
   }, []);
 
   const generateOptions = useCallback((correctAnswer, allPokemon, numOpts) => {
@@ -131,7 +138,6 @@ function GameScreen() {
         // Hapus pemanggilan playWtpSound() dan setTimeout() dari sini.
         // Cukup ubah gameState menjadi 'presenting'.
         setGameState('presenting');
-        // ^^^ PERUBAHANNYA DI SINI ^^^
       }
     } catch (err) { 
         if (isActive) setError("Gagal memuat Pokémon berikutnya.");
@@ -294,6 +300,39 @@ return (
           )}
         </div>
       )}
+
+      <div className="min-h-[7rem] flex flex-col justify-center"> {/* Pembungkus agar layout stabil */}
+        {gameState === 'revealed' && currentPokemon && (
+          <div className="w-full bg-gray-700 p-3 rounded-lg animate-fade-in">
+            <div className="flex justify-around items-center text-center">
+              {/* Bagian Tipe Pokémon */}
+              <div>
+                <h3 className="text-sm font-bold text-gray-400">TYPE</h3>
+                <div className="flex gap-1 mt-1">
+                  {currentPokemon.types?.map(type => (
+                    <span 
+                      key={type} 
+                      className={`px-2 py-1 text-xs font-bold rounded-full uppercase ${typeColors[type] || 'bg-gray-500'}`}
+                    >
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Bagian Tinggi */}
+              <div>
+                <h3 className="text-sm font-bold text-gray-400">HEIGHT</h3>
+                <p className="text-lg font-semibold">{currentPokemon.height} m</p>
+              </div>
+              {/* Bagian Berat */}
+              <div>
+                <h3 className="text-sm font-bold text-gray-400">WEIGHT</h3>
+                <p className="text-lg font-semibold">{currentPokemon.weight} kg</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       
       {/* Opsi Jawaban */}
       <div className="grid grid-cols-2 gap-4 min-h-28 items-start [&>*:last-child:nth-child(odd)]:col-span-2">
