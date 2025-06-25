@@ -131,7 +131,6 @@ function GameScreen() {
 
       if (!pokemonDetails.image) { startNewRound(); return; }
       if (isActive) {
-        // vvv PERUBAHANNYA DI SINI vvv
         setCurrentPokemon(pokemonDetails);
         setOptions(generateOptions(pokemonDetails, pokemonList, numOptions));
         
@@ -301,31 +300,36 @@ return (
         </div>
       )}
 
-      <div className="min-h-[7rem] flex flex-col justify-center"> {/* Pembungkus agar layout stabil */}
+      <div className="-mt-4 min-h-[7rem] flex flex-col justify-center">
         {gameState === 'revealed' && currentPokemon && (
           <div className="w-full bg-gray-700 p-3 rounded-lg animate-fade-in">
-            <div className="flex justify-around items-center text-center">
+            {/* Kita ubah menjadi grid agar lebih rapi untuk 4 item */}
+            <div className="grid grid-cols-4 gap-2 text-center">
+              {/* Bagian Nomor Pokédex */}
+              <div className="col-span-1">
+                <h3 className="text-sm font-bold text-gray-400"># POKÉDEX</h3>
+                <p className="text-lg font-semibold">
+                  {String(currentPokemon.id).padStart(3, '0')}
+                </p>
+              </div>
               {/* Bagian Tipe Pokémon */}
-              <div>
+              <div className="col-span-1">
                 <h3 className="text-sm font-bold text-gray-400">TYPE</h3>
-                <div className="flex gap-1 mt-1">
+                <div className="flex flex-wrap gap-1 mt-1 justify-center">
                   {currentPokemon.types?.map(type => (
-                    <span 
-                      key={type} 
-                      className={`px-2 py-1 text-xs font-bold rounded-full uppercase ${typeColors[type] || 'bg-gray-500'}`}
-                    >
+                    <span key={type} className={`px-2 py-1 text-xs font-bold rounded-full uppercase ${typeColors[type] || 'bg-gray-500'}`}>
                       {type}
                     </span>
                   ))}
                 </div>
               </div>
               {/* Bagian Tinggi */}
-              <div>
+              <div className="col-span-1">
                 <h3 className="text-sm font-bold text-gray-400">HEIGHT</h3>
                 <p className="text-lg font-semibold">{currentPokemon.height} m</p>
               </div>
               {/* Bagian Berat */}
-              <div>
+              <div className="col-span-1">
                 <h3 className="text-sm font-bold text-gray-400">WEIGHT</h3>
                 <p className="text-lg font-semibold">{currentPokemon.weight} kg</p>
               </div>
