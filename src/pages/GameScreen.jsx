@@ -309,7 +309,7 @@ return (
               <div className="col-span-1">
                 <h3 className="text-sm font-bold text-gray-400"># POKÉDEX</h3>
                 <p className="text-lg font-semibold">
-                  {String(currentPokemon.id).padStart(3, '0')}
+                  {String(currentPokemon.id).padStart(4, '0')}
                 </p>
               </div>
               {/* Bagian Tipe Pokémon */}
