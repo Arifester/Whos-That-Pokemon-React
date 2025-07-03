@@ -2,6 +2,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { motion } from 'framer-motion';
+
+const pageAnimation = {
+  initial: {
+    opacity: 0,
+    y: 50, // Mulai dari 50px di bawah posisi asli
+  },
+  animate: {
+    opacity: 1,
+    y: 0, // Kembali ke posisi asli
+  },
+  exit: {
+    opacity: 0,
+    y: -50, // Keluar ke 50px di atas posisi asli
+  },
+  transition: {
+    duration: 0.4,
+    ease: 'easeOut',
+  },
+};
 
 function SetupScreen() {
   useDocumentTitle("Setup Game | Who's That Pokémon?");
@@ -51,6 +71,7 @@ function SetupScreen() {
 
   // --- RENDER UI ---
   return (
+    <motion.div {...pageAnimation}>
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-4xl">
         <h1 className="text-4xl font-bold text-yellow-400 mb-8 text-center">
@@ -163,6 +184,7 @@ function SetupScreen() {
         </div>
       </div>
     </div>
+    </motion.div>
   );
 }
 

@@ -3,6 +3,26 @@ import {useState, useEffect, useCallback, useRef} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import {wtpSound, correctSound, wrongSound} from '../utils/soundManager';
+// import { motion } from 'framer-motion';
+
+// const pageAnimation = {
+//   initial: {
+//     opacity: 0,
+//     scale: 0.8, // Mulai dari ukuran 80%
+//   },
+//   animate: {
+//     opacity: 1,
+//     scale: 1, // Animasikan ke ukuran 100%
+//   },
+//   exit: {
+//     opacity: 0,
+//     scale: 0.8, // Hilang dengan kembali mengecil
+//   },
+//   transition: {
+//     duration: 0.3,
+//     ease: 'easeOut',
+//   },
+// };
 
 function GameScreen() {
   const location = useLocation();
@@ -211,7 +231,7 @@ function GameScreen() {
     } catch (error) {
       console.error("Gagal menyimpan ke localStorage", error);
     }
-    
+
   } else {
     // Jika jawaban salah
     wrongSound.play();
@@ -255,6 +275,7 @@ function GameScreen() {
   }
 
 return (
+  // <motion.div {...pageAnimation}>
   <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
     <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
       <div className="flex justify-between items-center mb-4 text-lg">
@@ -332,6 +353,7 @@ return (
       </div>
     </div>
   </div>
+  // </motion.div>
 );
 }
 
