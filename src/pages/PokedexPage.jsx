@@ -66,7 +66,7 @@ function PokedexPage() {
 
             return (
               <div key={pokemonId} className="bg-gray-800 p-2 rounded-lg flex flex-col items-center text-center">
-                <p className="font-mono text-sm text-gray-400">#{String(pokemonId).padStart(3, '0')}</p>
+                <p className="font-mono text-sm text-gray-400">#{String(pokemonId).padStart(4, '0')}</p>
                 <div className="w-24 h-24 flex items-center justify-center">
                   <img 
                     src={getPokemonImageUrl(pokemonId)} 
