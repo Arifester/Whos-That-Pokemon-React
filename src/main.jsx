@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomeScreen from './pages/HomeScreen.jsx';
 import SetupScreen from './pages/SetupScreen.jsx';
 import GameScreen from './pages/GameScreen.jsx';
+import PokedexPage from './pages/PokedexPage.jsx';
 import EndScreen from './pages/EndScreen.jsx';
 import './index.css';
 
@@ -23,6 +24,9 @@ const router = createBrowserRouter([
   {
     path: '/game',
     element: <GameScreen />,
+  },
+  { path: '/pokedex',
+    element: <PokedexPage />,
   },
   { path: '/end',
     element: <EndScreen />,
