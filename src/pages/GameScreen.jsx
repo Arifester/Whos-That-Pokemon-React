@@ -194,6 +194,24 @@ function GameScreen() {
   if (isCorrect) {
     correctSound.play();
     setScore((prev) => prev + 1);
+
+    try {
+      // 1. Ambil data yang sudah ada dari localStorage
+      const unlockedPokemon = JSON.parse(localStorage.getItem('unlockedPokemon') || '[]');
+
+      // 2. Gunakan Set untuk memastikan tidak ada nama duplikat
+      const unlockedSet = new Set(unlockedPokemon);
+
+      // 3. Tambahkan nama Pokémon yang baru saja ditebak
+      unlockedSet.add(currentPokemon.name.toLowerCase());
+
+      // 4. Simpan kembali array yang sudah diperbarui ke localStorage
+      localStorage.setItem('unlockedPokemon', JSON.stringify(Array.from(unlockedSet)));
+
+    } catch (error) {
+      console.error("Gagal menyimpan ke localStorage", error);
+    }
+    
   } else {
     // Jika jawaban salah
     wrongSound.play();
