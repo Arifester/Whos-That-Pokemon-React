@@ -4,6 +4,26 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useEffect, useState } from 'react';
 // PERUBAHAN 1: Import instance 'gameOverSound', bukan lagi fungsi playGameOverSound
 import { gameOverSound } from '../utils/soundManager';
+// import { motion } from 'framer-motion';
+
+// const pageAnimation = {
+//   initial: {
+//     opacity: 0,
+//     scale: 0.9, // Mulai dari ukuran 90%
+//   },
+//   animate: {
+//     opacity: 1,
+//     scale: 1,
+//   },
+//   exit: {
+//     opacity: 0,
+//     y: 50, // Hilang dengan turun ke bawah
+//   },
+//   transition: {
+//     duration: 0.3,
+//     ease: 'easeInOut',
+//   },
+// };
 
 function EndScreen() {
   useDocumentTitle("Game Over | Who's That Pokémon?");
@@ -65,6 +85,7 @@ function EndScreen() {
 
   // --- RENDER UI ---
   return (
+    // <motion.div {...pageAnimation}>
     <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4 font-sans">
       <div className="text-center p-8 bg-gray-800 rounded-xl shadow-lg max-w-md mx-4">
         <h1 className="text-5xl font-bold text-yellow-400 mb-4">
@@ -118,6 +139,7 @@ function EndScreen() {
         </div>
       </div>
     </div>
+    // </motion.div>
   );
 }
 
