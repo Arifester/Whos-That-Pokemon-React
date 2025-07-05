@@ -12,24 +12,20 @@ function PokedexPage() {
   // --- STATE MANAGEMENT ---
   const [allPokemon, setAllPokemon] = useState([]);
   const [unlockedPokemon] = useState(() => new Set(JSON.parse(localStorage.getItem('unlockedPokemon') || '[]')));
-  const [genMap, setGenMap] = useState(new Map()); // Peta untuk Pokemon -> Generasi
+  const [genMap, setGenMap] = useState(new Map());
   const [isLoading, setIsLoading] = useState(true);
-
-  // --- STATE BARU UNTUK FILTER ---
-  const [activeGen, setActiveGen] = useState('all'); // 'all', 1, 2, ...
+  const [activeGen, setActiveGen] = useState('all');
   const [showRevealedOnly, setShowRevealedOnly] = useState(false);
 
   // --- DATA FETCHING ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Ambil master list dari National Pokédex
         const pokedexResponse = await fetch('https://pokeapi.co/api/v2/pokedex/1/');
         const pokedexData = await pokedexResponse.json();
         pokedexData.pokemon_entries.sort((a, b) => a.entry_number - b.entry_number);
         setAllPokemon(pokedexData.pokemon_entries);
 
-        // Ambil data dari semua 9 generasi untuk membuat peta generasi
         const genPromises = [...Array(9).keys()].map(i => fetch(`https://pokeapi.co/api/v2/generation/${i + 1}/`).then(res => res.json()));
         const genResults = await Promise.all(genPromises);
         
@@ -54,17 +50,14 @@ function PokedexPage() {
   const { filteredPokemon, stats } = useMemo(() => {
     let filtered = allPokemon;
 
-    // 1. Filter berdasarkan Generasi
     if (activeGen !== 'all') {
       filtered = filtered.filter(p => genMap.get(p.pokemon_species.name) === activeGen);
     }
     
-    // 2. Filter berdasarkan yang Sudah Terbuka
     if (showRevealedOnly) {
       filtered = filtered.filter(p => unlockedPokemon.has(p.pokemon_species.name));
     }
 
-    // 3. Hitung Statistik
     const totalInView = filtered.length;
     const unlockedInView = filtered.filter(p => unlockedPokemon.has(p.pokemon_species.name)).length;
     const percentage = totalInView > 0 ? Math.round((unlockedInView / totalInView) * 100) : 0;
@@ -74,7 +67,6 @@ function PokedexPage() {
       stats: { total: totalInView, unlocked: unlockedInView, percentage }
     };
   }, [allPokemon, unlockedPokemon, activeGen, showRevealedOnly, genMap]);
-
 
   // --- RENDER UI ---
   if (isLoading) {
@@ -92,8 +84,9 @@ function PokedexPage() {
           <Link to="/" className="text-blue-400 hover:underline mt-2 inline-block">&larr; Kembali ke Home</Link>
         </div>
 
-        {/* --- UI UNTUK FILTER BAR --- */}
-        <div className="sticky top-4 z-10 bg-gray-900 bg-opacity-80 backdrop-blur-sm p-4 rounded-xl mb-6 border border-gray-700">
+        {/* --- UI UNTUK FILTER BAR & STATISTIK (VERSI REVISI) --- */}
+        <div className="sticky top-4 z-10 bg-gray-800 bg-opacity-90 backdrop-blur-sm p-4 rounded-xl mb-6 border border-gray-700 flex flex-col gap-4">
+          {/* Baris untuk filter generasi dan toggle */}
           <div className="flex flex-wrap items-center justify-center gap-2">
             {['all', 1, 2, 3, 4, 5, 6, 7, 8, 9].map(gen => (
               <button 
@@ -104,24 +97,32 @@ function PokedexPage() {
                 {gen === 'all' ? 'All' : `Gen ${gen}`}
               </button>
             ))}
-            <div className="w-full h-px sm:h-6 sm:w-px bg-gray-600 my-2 sm:mx-4"></div>
+            <div className="w-full sm:w-auto h-px sm:h-6 sm:w-px bg-gray-600 my-2 sm:mx-4"></div>
             <div className="flex items-center gap-3">
-              <span className="font-semibold">Revealed Only</span>
+              <span className="font-semibold text-sm">Revealed Only</span>
               <button onClick={() => setShowRevealedOnly(prev => !prev)} className={`w-14 h-7 rounded-full p-1 flex items-center transition-colors ${showRevealedOnly ? 'bg-green-500 justify-end' : 'bg-gray-600 justify-start'}`}>
                 <motion.div layout transition={{ type: 'spring', stiffness: 700, damping: 30 }} className="w-5 h-5 bg-white rounded-full" />
               </button>
             </div>
           </div>
-        </div>
-
-        {/* --- UI UNTUK STATISTIK --- */}
-        <div className="text-center mb-6 bg-gray-800 p-3 rounded-lg">
-          <h2 className="text-xl font-bold">Progress {activeGen === 'all' ? 'Keseluruhan' : `Generasi ${activeGen}`}</h2>
-          <p className="font-mono text-2xl my-1"><span className="text-green-400">{stats.unlocked}</span> / <span className="text-red-400">{stats.total}</span></p>
-          <div className="w-full bg-gray-700 rounded-full h-2.5">
-            <div className="bg-yellow-400 h-2.5 rounded-full" style={{ width: `${stats.percentage}%` }}></div>
+          
+          {/* Baris untuk statistik */}
+          <div className="border-t border-gray-700 pt-3">
+            <h3 className="text-md font-bold text-center text-gray-300">
+              Progress {activeGen === 'all' ? 'Keseluruhan' : `Generasi ${activeGen}`}
+            </h3>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="font-mono text-lg whitespace-nowrap">
+                <span className="text-green-400">{stats.unlocked}</span>/{stats.total}
+              </p>
+              <div className="w-full bg-gray-700 rounded-full h-5 relative">
+                <div className="bg-yellow-400 h-5 rounded-full" style={{ width: `${stats.percentage}%` }}></div>
+                <span className="absolute inset-0 flex justify-center items-center text-xs font-bold text-gray-900">
+                  {stats.percentage}%
+                </span>
+              </div>
+            </div>
           </div>
-          <p className="text-sm font-bold mt-1">{stats.percentage}% Complete</p>
         </div>
 
         {/* --- Grid Pokémon --- */}
@@ -131,7 +132,7 @@ function PokedexPage() {
             const pokemonId = pokemon.entry_number;
 
             return (
-              <div key={pokemonId} className="bg-gray-800 p-2 rounded-lg flex flex-col items-center text-center transition-transform hover:scale-105">
+              <div key={pokemonId} className="bg-gray-800 p-2 rounded-lg flex flex-col items-center text-center transition-transform hover:scale-105 hover:bg-gray-700">
                 <p className="font-mono text-sm text-gray-400">#{String(pokemonId).padStart(3, '0')}</p>
                 <div className="w-24 h-24 flex items-center justify-center">
                   <img src={getPokemonImageUrl(pokemonId)} alt={isUnlocked ? pokemon.pokemon_species.name : "Unknown Pokémon"} className="w-full h-full object-contain transition-all duration-300" style={{ filter: isUnlocked ? 'none' : 'brightness(0)' }}/>
