@@ -3,6 +3,7 @@ import {useState, useEffect, useCallback, useRef} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import {wtpSound, correctSound, wrongSound} from '../utils/soundManager';
+import { StarIcon, ClockIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 // import { motion } from 'framer-motion';
 
 // const pageAnimation = {
@@ -322,13 +323,36 @@ return (
   // <motion.div {...pageAnimation}>
   <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
     <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
-      <div className="flex justify-between items-center mb-4 text-lg">
-        <p>Round: <span className="font-bold">{round > numRounds ? numRounds : round}/{numRounds}</span></p>
-        <p>Score: <span className="font-bold">{score}</span></p>
-        {/* Timer hanya muncul saat menebak */}
-        {gameState === 'guessing' && timeLeft !== null && (
-          <p className="text-red-400 font-bold">Time: {timeLeft}s</p>
-        )}
+      {/* Header: Ronde, Skor, Timer (Versi Revisi) */}
+      <div className="flex justify-between items-center mb-4 text-lg w-full gap-2">
+        
+        {/* Panel Ronde */}
+        <div className="flex-1 bg-gray-700 p-2 rounded-lg flex items-center justify-center gap-2">
+          <ArrowPathIcon className="h-5 w-5 text-gray-400" />
+          <p className="text-white">
+            <span className="font-bold">{round > numRounds ? numRounds : round}</span>/{numRounds}
+          </p>
+        </div>
+
+        {/* Panel Skor */}
+        <div className="flex-1 bg-gray-700 p-2 rounded-lg flex items-center justify-center gap-2">
+          <StarIcon className="h-5 w-5 text-yellow-400" />
+          <p className="font-bold text-xl text-white">{score}</p>
+        </div>
+
+        {/* Panel Timer */}
+        <div className="flex-1 bg-gray-700 p-2 rounded-lg flex items-center justify-center gap-2">
+          <ClockIcon className="h-5 w-5 text-red-400" />
+          {gameState === 'guessing' && timeLeft !== null ? (
+            // Tambahkan animasi pulse saat waktu kritis
+            <p className={`font-bold text-xl text-white ${timeLeft <= 5 ? 'text-red-400 animate-pulse' : ''}`}>
+              {timeLeft}s
+            </p>
+          ) : (
+            <p className="font-bold text-xl text-gray-500">-</p>
+          )}
+        </div>
+
       </div>
 
       {/* Loading antar ronde atau gambar Pokemon */}
