@@ -107,34 +107,52 @@ function GameScreen() {
 
   // 1. useEffect: Mengambil data Pokémon (HANYA SEKALI)
   useEffect(() => {
-    if (initialFetchDone.current) return;
-    if (!selectedGens) { navigate('/setup'); return; }
-    initialFetchDone.current = true;
+  if (initialFetchDone.current) return;
+  if (!selectedGens) { navigate('/setup'); return; }
+  initialFetchDone.current = true;
 
-    const fetchAllPokemonByGen = async () => {
-      setGameState('loading');
-      try {
-        const promises = selectedGens.map(genId =>
-          fetch(`https://pokeapi.co/api/v2/generation/${genId}/`).then(res => res.json())
-        );
-        const results = await Promise.all(promises);
-        let allPokemon = results.flatMap(genData => genData.pokemon_species);
+  const fetchAllPokemonByGen = async () => {
+    setGameState('loading');
+    try {
+      const promises = selectedGens.map(genId =>
+        fetch(`https://pokeapi.co/api/v2/generation/${genId}/`).then(res => res.json())
+      );
+      const results = await Promise.all(promises);
+      let allPokemon = results.flatMap(genData => genData.pokemon_species);
 
-        if (difficulty === 'expert') {
-          const detailPromises = allPokemon.map(p => fetch(p.url).then(res => res.json()));
-          const speciesDetails = await Promise.all(detailPromises);
-          const normalPokemonSpecies = speciesDetails.filter(s => !s.is_legendary && !s.is_mythical);
-          allPokemon = normalPokemonSpecies.map(s => {
-            const variety = s.varieties.find(v => v.is_default);
-            return { name: s.name, url: variety.pokemon.url };
-          });
+      if (difficulty === 'expert') {
+        console.log("Mode Expert: Memfilter Pokémon legendaris...");
+        
+        // --- LOGIKA BATCH PROCESSING DIMULAI DI SINI ---
+        const BATCH_SIZE = 50; // Kita akan proses 50 request per batch
+        let speciesDetails = [];
+
+        for (let i = 0; i < allPokemon.length; i += BATCH_SIZE) {
+          const batch = allPokemon.slice(i, i + BATCH_SIZE); // Ambil 50 pokemon
+          console.log(`Memproses batch ke-${(i / BATCH_SIZE) + 1}...`);
+          
+          const batchPromises = batch.map(p => fetch(p.url).then(res => res.json()));
+          const batchResults = await Promise.all(batchPromises);
+          speciesDetails = speciesDetails.concat(batchResults);
         }
-        setPokemonList(allPokemon);
-        setRound(1);
-      } catch (err) { setError("Gagal mengambil daftar Pokémon."); }
-    };
-    fetchAllPokemonByGen();
-  }, [selectedGens, navigate, difficulty]);
+        // --- AKHIR DARI LOGIKA BATCH PROCESSING ---
+
+        const normalPokemonSpecies = speciesDetails.filter(s => !s.is_legendary && !s.is_mythical);
+        
+        allPokemon = normalPokemonSpecies.map(s => {
+          const variety = s.varieties.find(v => v.is_default);
+          return { name: s.name, url: variety.pokemon.url };
+        });
+      }
+      setPokemonList(allPokemon);
+      setRound(1);
+    } catch (err) { 
+      console.error(err); // Tampilkan detail error di console untuk debug
+      setError("Gagal mengambil daftar Pokémon."); 
+    }
+  };
+  fetchAllPokemonByGen();
+}, [selectedGens, navigate, difficulty]);
 
   // 2. useEffect: Memulai ronde baru setiap kali 'round' berubah
   useEffect(() => {

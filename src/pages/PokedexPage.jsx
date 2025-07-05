@@ -97,7 +97,7 @@ function PokedexPage() {
                 {gen === 'all' ? 'All' : `Gen ${gen}`}
               </button>
             ))}
-            <div className="w-full sm:w-auto h-px sm:h-6 sm:w-px bg-gray-600 my-2 sm:mx-4"></div>
+            <div className="w-full h-px sm:h-6 sm:w-px bg-gray-600 my-2 sm:mx-4"></div>
             <div className="flex items-center gap-3">
               <span className="font-semibold text-sm">Revealed Only</span>
               <button onClick={() => setShowRevealedOnly(prev => !prev)} className={`w-14 h-7 rounded-full p-1 flex items-center transition-colors ${showRevealedOnly ? 'bg-green-500 justify-end' : 'bg-gray-600 justify-start'}`}>
