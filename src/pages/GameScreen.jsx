@@ -177,6 +177,7 @@ function GameScreen() {
         // Cukup ubah gameState menjadi 'presenting'.
         setGameState('presenting');
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (err) { 
         if (isActive) setError("Gagal memuat Pokémon berikutnya.");
     }
@@ -226,7 +227,7 @@ function GameScreen() {
 
     const timerId = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearInterval(timerId);
-  }, [timeLeft, gameState]);
+  }, [timeLeft, gameState, isSuddenDeath, navigate, score, numRounds, difficulty, timeLimit, numOptions]);
   
   // 4. useEffect: Menangani transisi ke ronde berikutnya ATAU akhir game
   useEffect(() => {
